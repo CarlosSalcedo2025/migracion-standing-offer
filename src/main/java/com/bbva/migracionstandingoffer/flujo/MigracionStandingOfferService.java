@@ -67,7 +67,9 @@ public class MigracionStandingOfferService {
     public ContextoMigracion migrarPorNumeroCasoEE(String casoEE, String etapaObjetivo) {
         log.info("[HILO: {}] Iniciando migración para caso Enterprise: {}", Thread.currentThread().getName(), casoEE);
         ContextoMigracion ctx = new ContextoMigracion(casoEE);
-        ctx.setEtapaObjetivo(etapaObjetivo != null ? etapaObjetivo.toUpperCase() : MigracionConstantes.ETAPA_RADICACION);
+        ctx.setEtapaObjetivo(etapaObjetivo != null && !etapaObjetivo.trim().isEmpty() 
+                ? etapaObjetivo.toUpperCase() 
+                : MigracionConstantes.ETAPA_FORMALIZACION);
 
         // 1. Consultar caso en la base de datos Oracle de Enterprise
         CasoRadicacionDto datosEE = eeRepository.consultarCasoEE(casoEE);
@@ -137,7 +139,9 @@ public class MigracionStandingOfferService {
                 (precarga != null ? precarga.getNumeroDocumento() : "SIN_ID");
 
         ContextoMigracion ctx = new ContextoMigracion(idCaso);
-        ctx.setEtapaObjetivo(etapaObjetivo != null ? etapaObjetivo.toUpperCase() : MigracionConstantes.ETAPA_RADICACION);
+        ctx.setEtapaObjetivo(etapaObjetivo != null && !etapaObjetivo.trim().isEmpty() 
+                ? etapaObjetivo.toUpperCase() 
+                : MigracionConstantes.ETAPA_FORMALIZACION);
 
         if (precarga != null) {
             Map<String, Object> base = (Map<String, Object>) radicacionMapper.construirContrato(precarga).get(MigracionConstantes.CLAVE_CONTRATO);

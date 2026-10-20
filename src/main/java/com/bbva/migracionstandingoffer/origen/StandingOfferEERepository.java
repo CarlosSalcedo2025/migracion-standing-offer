@@ -72,6 +72,7 @@ public class StandingOfferEERepository {
         JsonNode contrato = root.has("contrato") ? root.get("contrato") : root;
 
         CasoRadicacionDto dto = new CasoRadicacionDto();
+        dto.setConsecutivo(extraerValor(contrato, "consecutivo"));
         dto.setNombreCliente(extraerValor(contrato, "nombreCliente"));
         dto.setTipoDocumento(extraerValor(contrato, "tipoDocumento"));
         dto.setNumeroDocumento(extraerValor(contrato, "numeroDocumento"));

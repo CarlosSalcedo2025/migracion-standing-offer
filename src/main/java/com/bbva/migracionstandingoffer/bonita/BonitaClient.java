@@ -8,10 +8,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Collections;
@@ -21,11 +19,13 @@ import java.util.function.Function;
 @Component
 public class BonitaClient {
     private static final Logger log = LoggerFactory.getLogger(BonitaClient.class);
-    private static final ParameterizedTypeReference<List<FlowNodeDto>> FLOW_NODES = new ParameterizedTypeReference<List<FlowNodeDto>>() {};
+    private static final ParameterizedTypeReference<List<FlowNodeDto>> FLOW_NODES =
+            new ParameterizedTypeReference<List<FlowNodeDto>>() {};
 
     private final RestTemplate restTemplate;
     private final BonitaProperties properties;
-    private volatile BonitaSession session;
+
+    private BonitaSession session;
 
     public BonitaClient(RestTemplate bonitaRestTemplate, BonitaProperties properties) {
         this.restTemplate = bonitaRestTemplate;
@@ -78,7 +78,7 @@ public class BonitaClient {
 
         String userId = sessionInfo != null ? sessionInfo.path("user_id").asText(null) : null;
         if (userId == null || userId.isEmpty()) {
-            throw new IllegalStateException("Sesión Bonita sin user_id");
+            throw new IllegalStateException("No se obtuvo user_id de Bonita: " + sessionInfo);
         }
 
         this.session = new BonitaSession(token, jsession, userId);
@@ -86,19 +86,52 @@ public class BonitaClient {
         return this.session;
     }
 
+    /**
+     * Consulta el ID del proceso en Bonita por su nombre y versión.
+     * En Bonita BPM, la URL de búsqueda por query parameter 'f' no debe ir doblemente codificada
+     * como %3D, sino con el formato estándar /API/bpm/process?p=0&c=10&f=name=...&f=version=...
+     */
     public String obtenerProcesoId(String processName, String version) {
         return withRelogin(s -> {
-            String url = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/API/bpm/process")
-                    .queryParam("f", "name=" + processName)
-                    .queryParam("f", "version=" + version)
-                    .queryParam("p", "0")
-                    .queryParam("c", "1")
-                    .build().encode().toUriString();
+            try {
+                // 1. Intento con URL literal construida directamente (como el cliente original de StandingOffer)
+                String rawUrl = baseUrl() + "/API/bpm/process?p=0&c=10&o=displayName ASC&f=name=" + processName;
+                if (version != null && !version.isEmpty()) {
+                    rawUrl += "&f=version=" + version;
+                }
+                URI uri = URI.create(rawUrl.replace(" ", "%20"));
 
-            JsonNode list = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(authHeaders(s)), JsonNode.class).getBody();
-            if (list != null && list.isArray() && list.size() > 0) {
-                return list.get(0).path("id").asText();
+                JsonNode list = restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(authHeaders(s)), JsonNode.class).getBody();
+                if (list != null && list.isArray() && list.size() > 0) {
+                    String id = list.get(0).path("id").asText();
+                    log.info("Proceso Bonita encontrado: id={} name={} version={}", id, processName, version);
+                    return id;
+                }
+            } catch (Exception e) {
+                log.warn("Búsqueda con filtro exacto name/version falló: {}. Intentando búsqueda amplia...", e.getMessage());
             }
+
+            // 2. Fallback: listar procesos y filtrar en memoria por nombre
+            try {
+                URI uriTodos = URI.create(baseUrl() + "/API/bpm/process?p=0&c=50");
+                JsonNode todos = restTemplate.exchange(uriTodos, HttpMethod.GET, new HttpEntity<>(authHeaders(s)), JsonNode.class).getBody();
+                if (todos != null && todos.isArray()) {
+                    for (JsonNode proc : todos) {
+                        String name = proc.path("name").asText("");
+                        String ver = proc.path("version").asText("");
+                        if (name.equalsIgnoreCase(processName)) {
+                            if (version == null || version.isEmpty() || ver.equalsIgnoreCase(version)) {
+                                String id = proc.path("id").asText();
+                                log.info("Proceso Bonita encontrado por escaneo: id={} name={} version={}", id, name, ver);
+                                return id;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("Fallo escaneando lista de procesos: {}", ex.getMessage());
+            }
+
             throw new IllegalStateException("No se encontró en Bonita el proceso '" + processName + "' versión '" + version + "'");
         });
     }
@@ -106,9 +139,7 @@ public class BonitaClient {
     public String instanciar(final String processId, final Object payload) {
         log.info("Radicando caso en Bonita CM: processId={}", processId);
         return withRelogin(s -> {
-            URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/API/bpm/process/" + processId + "/instantiation")
-                    .queryParam("user", s.getUserId())
-                    .build().encode().toUri();
+            URI uri = URI.create(baseUrl() + "/API/bpm/process/" + processId + "/instantiation?user=" + s.getUserId());
 
             JsonNode body = restTemplate.exchange(
                     uri,
@@ -133,13 +164,7 @@ public class BonitaClient {
 
         for (int i = 1; i <= attempts; i++) {
             List<FlowNodeDto> tasks = withRelogin(s -> {
-                URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/API/bpm/humanTask")
-                        .queryParam("f", "caseId=" + caseId)
-                        .queryParam("f", "state=ready")
-                        .queryParam("p", "0")
-                        .queryParam("c", "20")
-                        .build().encode().toUri();
-
+                URI uri = URI.create(baseUrl() + "/API/bpm/humanTask?p=0&c=20&f=caseId=" + caseId + "&f=state=ready");
                 return restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(authHeaders(s)), FLOW_NODES).getBody();
             });
 
@@ -166,11 +191,7 @@ public class BonitaClient {
     public void ejecutarTarea(final String taskId, final Object payload) {
         log.info("Ejecutando tarea taskId={} en Bonita CM", taskId);
         withRelogin(s -> {
-            URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/API/bpm/userTask/" + taskId + "/execution")
-                    .queryParam("assign", "false")
-                    .queryParam("user", s.getUserId())
-                    .build().encode().toUri();
-
+            URI uri = URI.create(baseUrl() + "/API/bpm/userTask/" + taskId + "/execution?assign=false&user=" + s.getUserId());
             restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(payload, jsonHeaders(s)), Void.class);
             return null;
         });
@@ -178,26 +199,24 @@ public class BonitaClient {
     }
 
     private <T> T withRelogin(Function<BonitaSession, T> action) {
-        BonitaSession s = this.session;
-        if (s == null) {
-            s = login();
+        BonitaSession act = this.session;
+        if (act == null) {
+            act = login();
         }
         try {
-            return action.apply(s);
-        } catch (HttpStatusCodeException e) {
-            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                log.warn("Sesión expirada en Bonita. Reintentando login...");
-                s = login();
-                return action.apply(s);
-            }
-            throw e;
+            return action.apply(act);
+        } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {
+            log.warn("Sesión Bonita expirada (HTTP {}), reautenticando...", e.getStatusCode());
+            this.session = login();
+            return action.apply(this.session);
         }
     }
 
     private HttpHeaders authHeaders(BonitaSession s) {
         HttpHeaders h = new HttpHeaders();
-        h.add("X-Bonita-API-Token", s.getApiToken());
-        h.add("Cookie", "JSESSIONID=" + s.getJsessionId() + "; X-Bonita-API-Token=" + s.getApiToken());
+        h.set("X-Bonita-API-Token", s.getApiToken());
+        h.set("Cookie", "JSESSIONID=" + s.getJsessionId() + "; X-Bonita-API-Token=" + s.getApiToken());
+        h.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         return h;
     }
 
@@ -207,16 +226,20 @@ public class BonitaClient {
         return h;
     }
 
-    private static String cookieValue(String setCookie) {
-        int eq = setCookie.indexOf('=');
-        int semi = setCookie.indexOf(';');
-        if (semi > eq && eq > 0) {
-            return setCookie.substring(eq + 1, semi);
+    private String cookieValue(String cookieHeader) {
+        int eq = cookieHeader.indexOf('=');
+        int semi = cookieHeader.indexOf(';');
+        if (semi == -1) {
+            semi = cookieHeader.length();
         }
-        return eq > 0 ? setCookie.substring(eq + 1) : setCookie;
+        return cookieHeader.substring(eq + 1, semi).trim();
     }
 
     public String baseUrl() {
-        return this.properties.getBaseUrl();
+        String url = this.properties.getBaseUrl();
+        if (url != null && url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+        return url;
     }
 }

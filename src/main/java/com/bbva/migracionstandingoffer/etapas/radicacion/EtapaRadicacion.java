@@ -57,12 +57,11 @@ public class EtapaRadicacion implements EtapaMigracion {
 
             // Si el contrato ya tiene datos precargados, los envía en el formato esperado
             Map<String, Object> payload;
-            if (contexto.getContrato().containsKey("nombreCliente")) {
-                payload = wrapContrato(contexto.getContrato());
-            } else {
-                // Si no hay datos directos, asume payload vacío o default
-                payload = wrapContrato(contexto.getContrato());
+            if (contexto.getContrato() != null && !contexto.getContrato().containsKey("consecutivo")) {
+                contexto.getContrato().put("consecutivo", "1");
             }
+
+            payload = wrapContrato(contexto.getContrato());
 
             String caseId = bonitaClient.instanciar(processId, payload);
             contexto.setCaseIdCM(caseId);

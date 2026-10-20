@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CasoRadicacionDto {
     private String nombreCliente;
+    private String consecutivo;
     private String tipoDocumento;
     private String numeroDocumento;
     private String digitoVerificacion;
@@ -45,6 +46,14 @@ public class CasoRadicacionDto {
 
     public void setNombreCliente(String nombreCliente) {
         this.nombreCliente = nombreCliente;
+    }
+
+    public String getConsecutivo() {
+        return consecutivo;
+    }
+
+    public void setConsecutivo(String consecutivo) {
+        this.consecutivo = consecutivo;
     }
 
     public String getTipoDocumento() {

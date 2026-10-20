@@ -59,12 +59,13 @@ public class MigracionController {
 
     /**
      * Endpoint principal para migrar un caso pasándole el número de caso de Enterprise.
-     * Sanitiza la variable de ruta para prevenir inyecciones y XSS.
+     * Por defecto ejecuta el FLUJO COMPLETO (todas las 5 etapas hasta Formalización).
+     * Opcionalmente se puede indicar 'etapaObjetivo' para detenerse en una etapa intermedia.
      */
     @PostMapping("/caso-ee/{casoEE}")
     public ResponseEntity<ContextoMigracion> migrarPorCasoEE(
             @PathVariable("casoEE") String casoEE,
-            @RequestParam(value = "etapaObjetivo", defaultValue = MigracionConstantes.ETAPA_RADICACION) String etapaObjetivo) {
+            @RequestParam(value = "etapaObjetivo", defaultValue = MigracionConstantes.ETAPA_FORMALIZACION) String etapaObjetivo) {
 
         String casoLimpio = InputSanitizer.sanitizarIdentificador(casoEE);
         String etapaLimpia = InputSanitizer.sanitizarIdentificador(etapaObjetivo);

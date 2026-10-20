@@ -1,0 +1,339 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "BBVA - Migración Standing Offer (Bonita EE a CM)",
+		"description": "Colección completa de endpoints para el robot de migración de casos de Standing Offer desde Bonita Enterprise hacia Bonita Community.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/migracion-standing-offer",
+			"type": "string"
+		},
+		{
+			"key": "casoEE",
+			"value": "1004523",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Diagnóstico y Salud",
+			"item": [
+				{
+					"name": "GET Diagnóstico Conexión Bonita CM",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/diagnostico",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"diagnostico"
+							]
+						},
+						"description": "Verifica autenticación y conectividad con la API de Bonita Community."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Consulta de Relaciones Migradas (EE -> CM)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/relaciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"relaciones"
+							]
+						},
+						"description": "Devuelve la auditoría de todos los casos migrados en la sesión o archivados."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Migración Flujo a Flujo (Desde BD Enterprise)",
+			"item": [
+				{
+					"name": "⚡ MIGRACIÓN COMPLETA (Todo el flujo Radicación -> Formalización)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso-ee/{{casoEE}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso-ee",
+								"{{casoEE}}"
+							]
+						},
+						"description": "Ejecuta de manera unificada todo el flujo completo: Radicación -> Scoring -> Evaluación y Sanción -> VoBo Pagador -> Formalización."
+					},
+					"response": []
+				},
+				{
+					"name": "Paso 1 - Solo Radicación (Crear caso en CM)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso-ee/{{casoEE}}?etapaObjetivo=RADICACION",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso-ee",
+								"{{casoEE}}"
+							],
+							"query": [
+								{
+									"key": "etapaObjetivo",
+									"value": "RADICACION",
+									"description": "Solo instancia el proceso y genera el caseId en Bonita CM"
+								}
+							]
+						},
+						"description": "Consulta el caso en Oracle STF_CASE, arma el contrato y radica en Bonita CM."
+					},
+					"response": []
+				},
+				{
+					"name": "Paso 2 - Hasta Scoring",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso-ee/{{casoEE}}?etapaObjetivo=SCORING",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso-ee",
+								"{{casoEE}}"
+							],
+							"query": [
+								{
+									"key": "etapaObjetivo",
+									"value": "SCORING",
+									"description": "Radica y completa la tarea de Scoring"
+								}
+							]
+						},
+						"description": "Ejecuta Radicación + Tarea Scoring."
+					},
+					"response": []
+				},
+				{
+					"name": "Paso 3 - Hasta Evaluación y Sanción",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso-ee/{{casoEE}}?etapaObjetivo=EVALUACION_SANCION",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso-ee",
+								"{{casoEE}}"
+							],
+							"query": [
+								{
+									"key": "etapaObjetivo",
+									"value": "EVALUACION_SANCION",
+									"description": "Radica, Scoring y Evaluación/Sanción"
+								}
+							]
+						},
+						"description": "Ejecuta Radicación + Scoring + Evaluación y Sanción."
+					},
+					"response": []
+				},
+				{
+					"name": "Paso 4 - Hasta VoBo Pagador",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso-ee/{{casoEE}}?etapaObjetivo=VOBO_PAGADOR",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso-ee",
+								"{{casoEE}}"
+							],
+							"query": [
+								{
+									"key": "etapaObjetivo",
+									"value": "VOBO_PAGADOR",
+									"description": "Avanza hasta el visto bueno de libranza"
+								}
+							]
+						},
+						"description": "Ejecuta Radicación + Scoring + Evaluación y Sanción + VoBo Pagador."
+					},
+					"response": []
+				},
+				{
+					"name": "Paso 5 - Migración Completa (Hasta Formalización)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso-ee/{{casoEE}}?etapaObjetivo=FORMALIZACION",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso-ee",
+								"{{casoEE}}"
+							],
+							"query": [
+								{
+									"key": "etapaObjetivo",
+									"value": "FORMALIZACION",
+									"description": "Recorre las 5 etapas hasta el cierre del caso"
+								}
+							]
+						},
+						"description": "Ejecuta el pipeline completo de las 5 etapas cerrando el caso."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Migración Masiva (Lotes Multihilo)",
+			"item": [
+				{
+					"name": "POST Migrar Lote de Casos EE",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"casos\": [\n    \"1004523\",\n    \"1004524\",\n    \"1004525\"\n  ],\n  \"etapaObjetivo\": \"FORMALIZACION\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/migracion/lote",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"lote"
+							]
+						},
+						"description": "Distribuye una lista de números de casos entre el pool de subprocesos concurrentes."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Migración Manual Directa (Custom Body)",
+			"item": [
+				{
+					"name": "POST Migración Caso Manual (Payload Directo)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"casoNegocio\": \"TEST-99881\",\n  \"etapaObjetivo\": \"FORMALIZACION\",\n  \"precarga\": {\n    \"nombreCliente\": \"CARLOS ARTURO SALCEDO\",\n    \"tipoDocumento\": \"CC\",\n    \"numeroDocumento\": \"1020304050\",\n    \"correoCliente\": \"carlos.salcedo@bbva.com\",\n    \"numeroCelular\": \"3101234567\",\n    \"subProducto\": \"LIBRANZA\",\n    \"valorNuevaOperacion\": \"65000000\",\n    \"valorCuotaNuevaOperacion\": \"1250000\",\n    \"plazo\": \"60\",\n    \"codigoConvenio\": \"CONV-001\",\n    \"nombreConvenio\": \"MINISTERIO DE DEFENSA\"\n  },\n  \"scoring\": {\n    \"techo\": \"70000000\",\n    \"buro\": \"Aprobado\",\n    \"observaciones\": \"Aprobado por comité scoring\",\n    \"proximoPaso\": \"Continuar\"\n  },\n  \"evaluacionSancion\": {\n    \"acta\": \"ACTA-2026-10\",\n    \"fechaActa\": \"2026-10-20\",\n    \"montoAprobado\": \"65000000\",\n    \"observaciones\": \"Sanción conforme\",\n    \"proximoPaso\": \"Continuar\"\n  },\n  \"voBoPagador\": {\n    \"cuotaVoBo\": \"1250000\",\n    \"valorMaximoTotalCredito\": \"65,000,000.00\",\n    \"observaciones\": \"Visto bueno aprobado pagaduría\",\n    \"proximoPaso\": \"Continuar\"\n  },\n  \"formalizacion\": {\n    \"cuotaContratoFormalizacion\": \"60\",\n    \"valorMaximoTotalCredito\": \"65,000,000.00\",\n    \"observaciones\": \"Formalización exitosa\",\n    \"proximoPaso\": \"Continuar\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/migracion/caso",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"migracion",
+								"caso"
+							]
+						},
+						"description": "Permite inyectar un caso manualmente sin consultar Oracle STF_CASE."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

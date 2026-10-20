@@ -16,8 +16,8 @@ server:
 # ==============================================================================
 bonita:
   base-url: ${KEY_SERV_B7_COM:https://bbvabonitadesmig.co.igrupobbva:9443}/bonita
-  username: ${KEY_USER_B7:proxibonita}
-  password: ${KEY_PASS_B7:1R36oEHP8hH}
+  username: ${KEY_USER_B7:T011815}
+  password: ${KEY_PASS_B7:T011815}
   process-name: Standing Offer
   process-version: 1.5.7
   poll-attempts: 25
