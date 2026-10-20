@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: migracion-standing-offer
+
+# ==============================================================================
+# Configuración del Servidor y Context Path
+# ==============================================================================
+server:
+  port: ${SERVER_PORT:9137}
+  servlet:
+    context-path: /migracion-standing-offer
+
+# ==============================================================================
+# Conexión con Bonita Community (Destino)
+# Mapeado a /etc/profile.d/ENV_BONITA.sh
+# ==============================================================================
+bonita:
+  base-url: ${KEY_SERV_B7_COM:https://bbvabonitadesmig.co.igrupobbva:9443}/bonita
+  username: ${KEY_USER_B7:proxibonita}
+  password: ${KEY_PASS_B7:1R36oEHP8hH}
+  process-name: Standing Offer
+  process-version: 1.5.7
+  poll-attempts: 25
+  poll-delay-ms: 3000
+
+# ==============================================================================
+# Parámetros del Robot de Migración: Concurrencia y Resiliencia
+# ==============================================================================
+migracion:
+  hilos: ${MIGRACION_HILOS:8}
+  resumen-dir: ${MIGRACION_RESUMEN_DIR:logs/migracion-standing-offer}
+  reintentos:
+    max-intentos: ${MIGRACION_MAX_REINTENTOS:3}
+    espera-ms: ${MIGRACION_ESPERA_REINTENTO_MS:3000}
+
+# ==============================================================================
+# Base de Datos Enterprise (Origen) - Esquema BBVA_BI / STF_CASE
+# ==============================================================================
+enterprise:
+  datasource:
+    url: ${DB_HOST_BI:jdbc:oracle:thin:@//exbbvascan-de.co.igrupobbva:15535/DCARBON}
+    username: ${DB_USER_BI:BBVA_BI}
+    password: ${DB_PASSWORD_BI:BBVA_BI}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+# ==============================================================================
+# Base de Datos Community (Destino) - Esquema BBVA_BI_COM / BDM
+# ==============================================================================
+community:
+  datasource:
+    url: ${DB_HOST_BI_COM:jdbc:oracle:thin:@//exbbvascan-de.co.igrupobbva:15535/DCARBONPC}
+    username: ${DB_USER_BI_COM:${DB_USER_BI:BBVA_BI}}
+    password: ${DB_PASSWORD_BI_COM:${DB_PASSWORD_BI:BBVA_BI}}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+# ==============================================================================
+# Niveles de Log
+# ==============================================================================
+logging:
+  level:
+    com.bbva.migracionstandingoffer: INFO
+    org.springframework.web: INFO
