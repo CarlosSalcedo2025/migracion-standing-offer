@@ -1,35 +1,73 @@
 package com.bbva.migracionstandingoffer.etapas.vobopagador;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VoBoPagadorDto {
-    @Builder.Default
     private Object cuotaContratoFormalizacion = 30;
-
-    @Builder.Default
     private String cuotaVoBo = "30000";
-
-    @Builder.Default
     private String valorMaximoTotalCredito = "61,800,000.00";
-
-    @Builder.Default
     private String cuotaRetanqueo = "30";
-
-    @Builder.Default
     private String valorCuotaRecoger = "30";
-
-    @Builder.Default
     private String observaciones = "ok";
-
-    @Builder.Default
     private String proximoPaso = "Continuar";
+
+    public VoBoPagadorDto() {
+    }
+
+    public Object getCuotaContratoFormalizacion() {
+        return cuotaContratoFormalizacion;
+    }
+
+    public void setCuotaContratoFormalizacion(Object cuotaContratoFormalizacion) {
+        this.cuotaContratoFormalizacion = cuotaContratoFormalizacion;
+    }
+
+    public String getCuotaVoBo() {
+        return cuotaVoBo;
+    }
+
+    public void setCuotaVoBo(String cuotaVoBo) {
+        this.cuotaVoBo = cuotaVoBo;
+    }
+
+    public String getValorMaximoTotalCredito() {
+        return valorMaximoTotalCredito;
+    }
+
+    public void setValorMaximoTotalCredito(String valorMaximoTotalCredito) {
+        this.valorMaximoTotalCredito = valorMaximoTotalCredito;
+    }
+
+    public String getCuotaRetanqueo() {
+        return cuotaRetanqueo;
+    }
+
+    public void setCuotaRetanqueo(String cuotaRetanqueo) {
+        this.cuotaRetanqueo = cuotaRetanqueo;
+    }
+
+    public String getValorCuotaRecoger() {
+        return valorCuotaRecoger;
+    }
+
+    public void setValorCuotaRecoger(String valorCuotaRecoger) {
+        this.valorCuotaRecoger = valorCuotaRecoger;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public String getProximoPaso() {
+        return proximoPaso;
+    }
+
+    public void setProximoPaso(String proximoPaso) {
+        this.proximoPaso = proximoPaso;
+    }
 }

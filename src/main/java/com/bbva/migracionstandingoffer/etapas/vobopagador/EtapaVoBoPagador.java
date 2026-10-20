@@ -2,6 +2,7 @@ package com.bbva.migracionstandingoffer.etapas.vobopagador;
 
 import com.bbva.migracionstandingoffer.bonita.BonitaClient;
 import com.bbva.migracionstandingoffer.bonita.FlowNodeDto;
+import com.bbva.migracionstandingoffer.comun.MigracionConstantes;
 import com.bbva.migracionstandingoffer.core.ContextoMigracion;
 import com.bbva.migracionstandingoffer.core.EtapaMigracion;
 import com.bbva.migracionstandingoffer.core.ResultadoEtapa;
@@ -30,12 +31,12 @@ public class EtapaVoBoPagador implements EtapaMigracion {
 
     @Override
     public String getNombreEtapa() {
-        return "VOBO_PAGADOR";
+        return MigracionConstantes.ETAPA_VOBO_PAGADOR;
     }
 
     @Override
     public String getNombreTareaBonita() {
-        return "VoBo Pagador";
+        return MigracionConstantes.TAREA_VOBO_PAGADOR;
     }
 
     @Override
@@ -52,10 +53,10 @@ public class EtapaVoBoPagador implements EtapaMigracion {
 
             FlowNodeDto task = bonitaClient.esperarTarea(caseId, getNombreTareaBonita());
 
-            VoBoPagadorDto dto = (VoBoPagadorDto) contexto.getContrato().get("_DATOS_VOBO_PAGADOR");
+            VoBoPagadorDto dto = (VoBoPagadorDto) contexto.getContrato().get(MigracionConstantes.CLAVE_DATOS_VOBO_PAGADOR);
             Map<String, Object> payload = mapper.enriquecerContrato(contexto.getContrato(), dto);
 
-            Map<String, Object> contratoActualizado = (Map<String, Object>) payload.get("contrato");
+            Map<String, Object> contratoActualizado = (Map<String, Object>) payload.get(MigracionConstantes.CLAVE_CONTRATO);
             contexto.fusionarContrato(contratoActualizado);
 
             log.info("[VOBO_PAGADOR] Ejecutando tarea taskId={} en Bonita CM", task.getId());

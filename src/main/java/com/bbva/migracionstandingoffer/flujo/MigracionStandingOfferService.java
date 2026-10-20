@@ -1,5 +1,6 @@
 package com.bbva.migracionstandingoffer.flujo;
 
+import com.bbva.migracionstandingoffer.comun.MigracionConstantes;
 import com.bbva.migracionstandingoffer.config.MigracionProperties;
 import com.bbva.migracionstandingoffer.core.ContextoMigracion;
 import com.bbva.migracionstandingoffer.core.OrquestadorMigracion;
@@ -66,19 +67,19 @@ public class MigracionStandingOfferService {
     public ContextoMigracion migrarPorNumeroCasoEE(String casoEE, String etapaObjetivo) {
         log.info("[HILO: {}] Iniciando migración para caso Enterprise: {}", Thread.currentThread().getName(), casoEE);
         ContextoMigracion ctx = new ContextoMigracion(casoEE);
-        ctx.setEtapaObjetivo(etapaObjetivo != null ? etapaObjetivo.toUpperCase() : "RADICACION");
+        ctx.setEtapaObjetivo(etapaObjetivo != null ? etapaObjetivo.toUpperCase() : MigracionConstantes.ETAPA_RADICACION);
 
         // 1. Consultar caso en la base de datos Oracle de Enterprise
         CasoRadicacionDto datosEE = eeRepository.consultarCasoEE(casoEE);
         if (datosEE == null) {
             log.warn("Caso {} no encontrado en base de datos Enterprise.", casoEE);
-            ctx.setEstadoFinal("NO_ENCONTRADO");
+            ctx.setEstadoFinal(MigracionConstantes.ESTADO_NO_ENCONTRADO);
             ctx.agregarResultado(ResultadoEtapa.error("CONSULTA_EE", "Caso " + casoEE + " no existe en STF_CASE", 0));
             return ctx;
         }
 
         // 2. Mapear y armar el nuevo contrato para Bonita Community
-        Map<String, Object> contratoNuevo = (Map<String, Object>) radicacionMapper.construirContrato(datosEE).get("contrato");
+        Map<String, Object> contratoNuevo = (Map<String, Object>) radicacionMapper.construirContrato(datosEE).get(MigracionConstantes.CLAVE_CONTRATO);
         ctx.fusionarContrato(contratoNuevo);
 
         // 3. Ejecutar pipeline en Bonita Community (Radicación -> etapas subsiguientes)
@@ -114,7 +115,7 @@ public class MigracionStandingOfferService {
             } catch (Exception e) {
                 log.error("Error en ejecución concurrente de caso {}: {}", casoOriginal, e.getMessage(), e);
                 ContextoMigracion errCtx = new ContextoMigracion(casoOriginal);
-                errCtx.setEstadoFinal("ERROR");
+                errCtx.setEstadoFinal(MigracionConstantes.ESTADO_ERROR);
                 errCtx.agregarResultado(ResultadoEtapa.error("CONCURRENCIA", e.getMessage(), 0));
                 resultados.add(errCtx);
             }
@@ -136,27 +137,27 @@ public class MigracionStandingOfferService {
                 (precarga != null ? precarga.getNumeroDocumento() : "SIN_ID");
 
         ContextoMigracion ctx = new ContextoMigracion(idCaso);
-        ctx.setEtapaObjetivo(etapaObjetivo != null ? etapaObjetivo.toUpperCase() : "RADICACION");
+        ctx.setEtapaObjetivo(etapaObjetivo != null ? etapaObjetivo.toUpperCase() : MigracionConstantes.ETAPA_RADICACION);
 
         if (precarga != null) {
-            Map<String, Object> base = (Map<String, Object>) radicacionMapper.construirContrato(precarga).get("contrato");
+            Map<String, Object> base = (Map<String, Object>) radicacionMapper.construirContrato(precarga).get(MigracionConstantes.CLAVE_CONTRATO);
             ctx.fusionarContrato(base);
         }
 
         if (scoring != null) {
-            ctx.agregarDatoContrato("_DATOS_SCORING", scoring);
+            ctx.agregarDatoContrato(MigracionConstantes.CLAVE_DATOS_SCORING, scoring);
         }
 
         if (evaluacionSancion != null) {
-            ctx.agregarDatoContrato("_DATOS_EVALUACION_SANCION", evaluacionSancion);
+            ctx.agregarDatoContrato(MigracionConstantes.CLAVE_DATOS_EVALUACION_SANCION, evaluacionSancion);
         }
 
         if (voBoPagador != null) {
-            ctx.agregarDatoContrato("_DATOS_VOBO_PAGADOR", voBoPagador);
+            ctx.agregarDatoContrato(MigracionConstantes.CLAVE_DATOS_VOBO_PAGADOR, voBoPagador);
         }
 
         if (formalizacion != null) {
-            ctx.agregarDatoContrato("_DATOS_FORMALIZACION", formalizacion);
+            ctx.agregarDatoContrato(MigracionConstantes.CLAVE_DATOS_FORMALIZACION, formalizacion);
         }
 
         ContextoMigracion res = orquestador.ejecutar(ctx);

@@ -45,12 +45,12 @@ public class StandingOfferEERepository {
                 }
 
                 // Mapeo fallback por columnas básicas
-                return CasoRadicacionDto.builder()
-                        .nombreCliente(rs.getString("NOMBRECLIENTE"))
-                        .creRetanquearLibranza(rs.getString("NUMCONTRRT1"))
-                        .oficinaSegmentacion(rs.getString("OFICINASEG"))
-                        .canal(rs.getString("CANALPRESEN"))
-                        .build();
+                CasoRadicacionDto dto = new CasoRadicacionDto();
+                dto.setNombreCliente(rs.getString("NOMBRECLIENTE"));
+                dto.setCreRetanquearLibranza(rs.getString("NUMCONTRRT1"));
+                dto.setOficinaSegmentacion(rs.getString("OFICINASEG"));
+                dto.setCanal(rs.getString("CANALPRESEN"));
+                return dto;
             });
         } catch (EmptyResultDataAccessException e) {
             log.warn("Caso {} no fue encontrado en BBVA_BI.STF_CASE", nroCaso);
@@ -71,39 +71,39 @@ public class StandingOfferEERepository {
         JsonNode root = objectMapper.readTree(jsonText);
         JsonNode contrato = root.has("contrato") ? root.get("contrato") : root;
 
-        return CasoRadicacionDto.builder()
-                .nombreCliente(extraerValor(contrato, "nombreCliente"))
-                .tipoDocumento(extraerValor(contrato, "tipoDocumento"))
-                .numeroDocumento(extraerValor(contrato, "numeroDocumento"))
-                .digitoVerificacion(extraerValor(contrato, "digitoVerificacion"))
-                .correoCliente(extraerValor(contrato, "correoCliente"))
-                .numeroCelular(extraerValor(contrato, "numeroCelular"))
-                .numeroAltamiraCliente(extraerValor(contrato, "numeroAltamiraCliente"))
-                .fechaVigenciaCampana(extraerValor(contrato, "fechaVigenciaCampana"))
-                .fechaHoraSolicitud(extraerValor(contrato, "fechaHoraSolicitud"))
-                .numeroProducto(extraerValor(contrato, "numeroProducto"))
-                .subProducto(extraerValor(contrato, "subProducto"))
-                .codigoSubproducto(extraerValor(contrato, "codigoSubproducto"))
-                .marcaOneClic(extraerValor(contrato, "marcaOneClic"))
-                .valorNuevaOperacion(extraerValor(contrato, "valorNuevaOperacion"))
-                .valorCuotaNuevaOperacion(extraerValor(contrato, "valorCuotaNuevaOperacion"))
-                .tasaCreditoNuevo(extraerValor(contrato, "tasaCreditoNuevo"))
-                .plazo(extraerValor(contrato, "plazo"))
-                .cuentaAbono(extraerValor(contrato, "cuentaAbono"))
-                .canal(extraerValor(contrato, "canal"))
-                .oficinaSegmentacion(extraerValor(contrato, "oficinaSegmentacion"))
-                .creRetanquearLibranza(extraerValor(contrato, "creRetanquearLibranza"))
-                .creRetanquearConsumo(extraerValor(contrato, "creRetanquearConsumo"))
-                .creRetanquearHipoteca(extraerValor(contrato, "creRetanquearHipoteca"))
-                .creRetanquearVehiculo(extraerValor(contrato, "creRetanquearVehiculo"))
-                .creRetanquearLeasing(extraerValor(contrato, "creRetanquearLeasing"))
-                .codigoConvenio(extraerValor(contrato, "codigoConvenio"))
-                .nombreConvenio(extraerValor(contrato, "nombreConvenio"))
-                .tipoConvenio(extraerValor(contrato, "tipoConvenio"))
-                .numeroConsecutivo(extraerValor(contrato, "numeroConsecutivo"))
-                .direccionIp(extraerValor(contrato, "direccionIp"))
-                .descripcion(extraerValor(contrato, "descripcion"))
-                .build();
+        CasoRadicacionDto dto = new CasoRadicacionDto();
+        dto.setNombreCliente(extraerValor(contrato, "nombreCliente"));
+        dto.setTipoDocumento(extraerValor(contrato, "tipoDocumento"));
+        dto.setNumeroDocumento(extraerValor(contrato, "numeroDocumento"));
+        dto.setDigitoVerificacion(extraerValor(contrato, "digitoVerificacion"));
+        dto.setCorreoCliente(extraerValor(contrato, "correoCliente"));
+        dto.setNumeroCelular(extraerValor(contrato, "numeroCelular"));
+        dto.setNumeroAltamiraCliente(extraerValor(contrato, "numeroAltamiraCliente"));
+        dto.setFechaVigenciaCampana(extraerValor(contrato, "fechaVigenciaCampana"));
+        dto.setFechaHoraSolicitud(extraerValor(contrato, "fechaHoraSolicitud"));
+        dto.setNumeroProducto(extraerValor(contrato, "numeroProducto"));
+        dto.setSubProducto(extraerValor(contrato, "subProducto"));
+        dto.setCodigoSubproducto(extraerValor(contrato, "codigoSubproducto"));
+        dto.setMarcaOneClic(extraerValor(contrato, "marcaOneClic"));
+        dto.setValorNuevaOperacion(extraerValor(contrato, "valorNuevaOperacion"));
+        dto.setValorCuotaNuevaOperacion(extraerValor(contrato, "valorCuotaNuevaOperacion"));
+        dto.setTasaCreditoNuevo(extraerValor(contrato, "tasaCreditoNuevo"));
+        dto.setPlazo(extraerValor(contrato, "plazo"));
+        dto.setCuentaAbono(extraerValor(contrato, "cuentaAbono"));
+        dto.setCanal(extraerValor(contrato, "canal"));
+        dto.setOficinaSegmentacion(extraerValor(contrato, "oficinaSegmentacion"));
+        dto.setCreRetanquearLibranza(extraerValor(contrato, "creRetanquearLibranza"));
+        dto.setCreRetanquearConsumo(extraerValor(contrato, "creRetanquearConsumo"));
+        dto.setCreRetanquearHipoteca(extraerValor(contrato, "creRetanquearHipoteca"));
+        dto.setCreRetanquearVehiculo(extraerValor(contrato, "creRetanquearVehiculo"));
+        dto.setCreRetanquearLeasing(extraerValor(contrato, "creRetanquearLeasing"));
+        dto.setCodigoConvenio(extraerValor(contrato, "codigoConvenio"));
+        dto.setNombreConvenio(extraerValor(contrato, "nombreConvenio"));
+        dto.setTipoConvenio(extraerValor(contrato, "tipoConvenio"));
+        dto.setNumeroConsecutivo(extraerValor(contrato, "numeroConsecutivo"));
+        dto.setDireccionIp(extraerValor(contrato, "direccionIp"));
+        dto.setDescripcion(extraerValor(contrato, "descripcion"));
+        return dto;
     }
 
     private String extraerValor(JsonNode nodo, String campo) {

@@ -1,5 +1,6 @@
 package com.bbva.migracionstandingoffer.core;
 
+import com.bbva.migracionstandingoffer.comun.MigracionConstantes;
 import com.bbva.migracionstandingoffer.config.MigracionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public class OrquestadorMigracion {
             if (res != null && !res.isExitoso()) {
                 log.error("Fallo definitivo en etapa '{}' para caso={} tras {} intentos: {}",
                         etapa.getNombreEtapa(), contexto.getCasoNegocio(), intento, res.getMensaje());
-                contexto.setEstadoFinal("ERROR");
+                contexto.setEstadoFinal(MigracionConstantes.ESTADO_ERROR);
                 return contexto;
             }
 
@@ -76,12 +77,12 @@ public class OrquestadorMigracion {
             if (etapa.getNombreEtapa().equalsIgnoreCase(contexto.getEtapaObjetivo())) {
                 log.info("Caso {} alcanzó su etapa objetivo '{}'. Finalizando ejecución.",
                         contexto.getCasoNegocio(), contexto.getEtapaObjetivo());
-                contexto.setEstadoFinal("OK");
+                contexto.setEstadoFinal(MigracionConstantes.ESTADO_OK);
                 return contexto;
             }
         }
 
-        contexto.setEstadoFinal("OK");
+        contexto.setEstadoFinal(MigracionConstantes.ESTADO_OK);
         return contexto;
     }
 }

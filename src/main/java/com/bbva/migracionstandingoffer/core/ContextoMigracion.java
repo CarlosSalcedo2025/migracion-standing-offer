@@ -1,10 +1,10 @@
 package com.bbva.migracionstandingoffer.core;
 
-import lombok.Data;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
-
-@Data
 public class ContextoMigracion {
     private String casoNegocio;
     private String caseIdCM;
@@ -22,8 +22,59 @@ public class ContextoMigracion {
      */
     private List<ResultadoEtapa> historial = new ArrayList<>();
 
+    public ContextoMigracion() {
+    }
+
     public ContextoMigracion(String casoNegocio) {
         this.casoNegocio = casoNegocio;
+    }
+
+    public String getCasoNegocio() {
+        return casoNegocio;
+    }
+
+    public void setCasoNegocio(String casoNegocio) {
+        this.casoNegocio = casoNegocio;
+    }
+
+    public String getCaseIdCM() {
+        return caseIdCM;
+    }
+
+    public void setCaseIdCM(String caseIdCM) {
+        this.caseIdCM = caseIdCM;
+    }
+
+    public String getEtapaObjetivo() {
+        return etapaObjetivo;
+    }
+
+    public void setEtapaObjetivo(String etapaObjetivo) {
+        this.etapaObjetivo = etapaObjetivo;
+    }
+
+    public String getEstadoFinal() {
+        return estadoFinal;
+    }
+
+    public void setEstadoFinal(String estadoFinal) {
+        this.estadoFinal = estadoFinal;
+    }
+
+    public Map<String, Object> getContrato() {
+        return contrato;
+    }
+
+    public void setContrato(Map<String, Object> contrato) {
+        this.contrato = contrato;
+    }
+
+    public List<ResultadoEtapa> getHistorial() {
+        return historial;
+    }
+
+    public void setHistorial(List<ResultadoEtapa> historial) {
+        this.historial = historial;
     }
 
     public void agregarResultado(ResultadoEtapa resultado) {

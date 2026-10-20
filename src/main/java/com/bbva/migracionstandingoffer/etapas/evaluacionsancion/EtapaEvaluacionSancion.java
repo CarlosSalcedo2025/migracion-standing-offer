@@ -2,6 +2,7 @@ package com.bbva.migracionstandingoffer.etapas.evaluacionsancion;
 
 import com.bbva.migracionstandingoffer.bonita.BonitaClient;
 import com.bbva.migracionstandingoffer.bonita.FlowNodeDto;
+import com.bbva.migracionstandingoffer.comun.MigracionConstantes;
 import com.bbva.migracionstandingoffer.core.ContextoMigracion;
 import com.bbva.migracionstandingoffer.core.EtapaMigracion;
 import com.bbva.migracionstandingoffer.core.ResultadoEtapa;
@@ -30,12 +31,12 @@ public class EtapaEvaluacionSancion implements EtapaMigracion {
 
     @Override
     public String getNombreEtapa() {
-        return "EVALUACION_SANCION";
+        return MigracionConstantes.ETAPA_EVALUACION_SANCION;
     }
 
     @Override
     public String getNombreTareaBonita() {
-        return "Evaluacion y sancion";
+        return MigracionConstantes.TAREA_EVALUACION_SANCION;
     }
 
     @Override
@@ -52,11 +53,11 @@ public class EtapaEvaluacionSancion implements EtapaMigracion {
 
             FlowNodeDto task = bonitaClient.esperarTarea(caseId, getNombreTareaBonita());
 
-            EvaluacionSancionDto dto = (EvaluacionSancionDto) contexto.getContrato().get("_DATOS_EVALUACION_SANCION");
+            EvaluacionSancionDto dto = (EvaluacionSancionDto) contexto.getContrato().get(MigracionConstantes.CLAVE_DATOS_EVALUACION_SANCION);
             Map<String, Object> payload = mapper.enriquecerContrato(contexto.getContrato(), dto);
 
             // Actualizar contrato acumulado en el contexto
-            Map<String, Object> contratoActualizado = (Map<String, Object>) payload.get("contrato");
+            Map<String, Object> contratoActualizado = (Map<String, Object>) payload.get(MigracionConstantes.CLAVE_CONTRATO);
             contexto.fusionarContrato(contratoActualizado);
 
             log.info("[EVALUACION_SANCION] Ejecutando tarea taskId={} en Bonita CM", task.getId());

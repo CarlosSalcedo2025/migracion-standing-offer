@@ -1,6 +1,7 @@
 package com.bbva.migracionstandingoffer.etapas.radicacion;
 
 import com.bbva.migracionstandingoffer.bonita.BonitaClient;
+import com.bbva.migracionstandingoffer.comun.MigracionConstantes;
 import com.bbva.migracionstandingoffer.config.BonitaProperties;
 import com.bbva.migracionstandingoffer.core.ContextoMigracion;
 import com.bbva.migracionstandingoffer.core.EtapaMigracion;
@@ -33,7 +34,7 @@ public class EtapaRadicacion implements EtapaMigracion {
 
     @Override
     public String getNombreEtapa() {
-        return "RADICACION";
+        return MigracionConstantes.ETAPA_RADICACION;
     }
 
     @Override
