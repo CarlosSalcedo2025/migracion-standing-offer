@@ -34,6 +34,24 @@ public class DataSourceConfig {
     }
 
     /**
+     * Datasource para consultar el BDM de Bonita Enterprise (BONITA7BDM.STANDINGOFFERDM).
+     * Permite consultar directamente los casos de negocio que inician por 3000xxxx.
+     */
+    @Bean(destroyMethod = "close")
+    public HikariDataSource bonitaBdmDataSource(
+            @Value("${bonita-bdm.datasource.url:${DB_HOST_B7BDM:jdbc:oracle:thin:@//exbbvascan-de.co.igrupobbva:15535/DBONITA}}") String url,
+            @Value("${bonita-bdm.datasource.username:${DB_USER_B7BDM:BONITA7BDM}}") String user,
+            @Value("${bonita-bdm.datasource.password:${DB_PASSWORD_B7BDM:BONITA7BDM}}") String password,
+            @Value("${bonita-bdm.datasource.driver-class-name:oracle.jdbc.OracleDriver}") String driver) {
+        return crearPool("bonita-bdm", url, user, password, driver);
+    }
+
+    @Bean
+    public JdbcTemplate bonitaBdmJdbcTemplate(@Qualifier("bonitaBdmDataSource") DataSource ds) {
+        return new JdbcTemplate(ds);
+    }
+
+    /**
      * Datasource secundario: Base de Datos Oracle de Community (Destino).
      * Disponible para consultar o validar tablas BDM/BI en el entorno Community.
      */

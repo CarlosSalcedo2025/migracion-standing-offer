@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
@@ -168,13 +169,22 @@ public class BonitaClient {
                 return restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(authHeaders(s)), FLOW_NODES).getBody();
             });
 
-            if (tasks != null) {
+            if (tasks != null && !tasks.isEmpty()) {
+                StringBuilder nombres = new StringBuilder();
+                for (FlowNodeDto t : tasks) {
+                    if (nombres.length() > 0) nombres.append(", ");
+                    nombres.append("'").append(t.getName()).append("' (").append(t.getId()).append(")");
+                }
+                log.info("Tareas listas encontradas en caseId={} (intento {}): [{}]", caseId, i, nombres);
+
                 for (FlowNodeDto task : tasks) {
                     if (taskName.equalsIgnoreCase(task.getName()) || taskName.equalsIgnoreCase(task.getDisplayName())) {
-                        log.info("Tarea encontrada: id={} name={} state={} intento={}", task.getId(), task.getName(), task.getState(), i);
+                        log.info("Tarea esperada encontrada: id={} name={} state={} intento={}", task.getId(), task.getName(), task.getState(), i);
                         return task;
                     }
                 }
+            } else {
+                log.debug("Aún no hay tareas 'ready' en caseId={} (intento {}/{})", caseId, i, attempts);
             }
 
             try {
@@ -188,10 +198,30 @@ public class BonitaClient {
         throw new IllegalStateException("Tiempo de espera agotado buscando tarea '" + taskName + "' en caseId=" + caseId);
     }
 
+    public void asignarTarea(final String taskId, final String userId) {
+        log.info("Asignando tarea taskId={} al usuario userId={}", taskId, userId);
+        withRelogin(s -> {
+            URI uri = URI.create(baseUrl() + "/API/bpm/humanTask/" + taskId);
+            Map<String, Object> body = Collections.singletonMap("assigned_id", userId != null ? userId : s.getUserId());
+            restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(body, jsonHeaders(s)), Void.class);
+            return null;
+        });
+    }
+
     public void ejecutarTarea(final String taskId, final Object payload) {
         log.info("Ejecutando tarea taskId={} en Bonita CM", taskId);
         withRelogin(s -> {
-            URI uri = URI.create(baseUrl() + "/API/bpm/userTask/" + taskId + "/execution?assign=false&user=" + s.getUserId());
+            // Asignar primero la tarea al usuario logueado por si está en la bandeja compartida sin asignar
+            try {
+                URI assignUri = URI.create(baseUrl() + "/API/bpm/humanTask/" + taskId);
+                Map<String, Object> assignBody = Collections.singletonMap("assigned_id", s.getUserId());
+                restTemplate.exchange(assignUri, HttpMethod.PUT, new HttpEntity<>(assignBody, jsonHeaders(s)), Void.class);
+                log.debug("Tarea taskId={} asignada previamente al usuario={}", taskId, s.getUserId());
+            } catch (Exception e) {
+                log.warn("No se pudo pre-asignar tarea taskId={} (puede que ya esté asignada): {}", taskId, e.getMessage());
+            }
+
+            URI uri = URI.create(baseUrl() + "/API/bpm/userTask/" + taskId + "/execution?assign=true&user=" + s.getUserId());
             restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(payload, jsonHeaders(s)), Void.class);
             return null;
         });
